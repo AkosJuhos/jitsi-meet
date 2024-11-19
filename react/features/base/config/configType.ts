@@ -334,6 +334,7 @@ export interface IConfig {
     enableDisplayNameInStats?: boolean;
     enableEmailInStats?: boolean;
     enableEncodedTransformSupport?: boolean;
+    setE2EEMode?: string;
     enableForcedReload?: boolean;
     enableIceRestart?: boolean;
     enableInsecureRoomNameWarning?: boolean;

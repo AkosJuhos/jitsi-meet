@@ -22,11 +22,12 @@ export interface INotifyClick {
  * @returns {React$Element<any>}
  */
 export default function SecurityDialog() {
+    const e2eeForced = useSelector((state: IReduxState) => state['features/base/config'].setE2EEMode);
     const e2eeSupported = useSelector((state: IReduxState) => state['features/base/conference'].e2eeSupported);
     const disableLobbyPassword = useSelector((state: IReduxState) => getSecurityUiConfig(state)?.disableLobbyPassword);
     const _isEnablingLobbyAllowed = useSelector(isEnablingLobbyAllowed);
     const isModerator = useSelector(isLocalParticipantModerator);
-    const showE2ee = Boolean(e2eeSupported) && isModerator;
+    const showE2ee = Boolean(e2eeSupported) && isModerator && !e2eeForced;
 
     return (
         <Dialog

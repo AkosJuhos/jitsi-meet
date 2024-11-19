@@ -1228,6 +1228,12 @@ var config = {
     //   externallyManagedKey: false,
     // },
 
+    // Option (string) to enable E2EE mode by default. There are 3 options:
+    // - default: E2EE will not be enabled when the meeting started, but you can turn it on from the menu
+    // - enabled: E2EE will be enabled by default for all participants, and you can turn it off with the regular settings
+    // - forced:  E2EE will be enabled, and you cannot turn it off
+    setE2EEMode: "forced",
+
     // Options related to end-to-end (participant to participant) ping.
     // e2eping: {
     //   // Whether ene-to-end pings should be enabled.

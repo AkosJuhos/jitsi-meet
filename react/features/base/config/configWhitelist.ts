@@ -136,6 +136,7 @@ export default [
     'e2eeLabels',
     'e2ee',
     'e2eping',
+    'setE2EEMode',
     'enableDisplayNameInStats',
     'enableEmailInStats',
     'enableEncodedTransformSupport',
