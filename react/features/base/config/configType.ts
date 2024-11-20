@@ -351,7 +351,6 @@ export interface IConfig {
     enableDisplayNameInStats?: boolean;
     enableEmailInStats?: boolean;
     enableEncodedTransformSupport?: boolean;
-    setE2EEMode?: string;
     enableForcedReload?: boolean;
     enableInsecureRoomNameWarning?: boolean;
     enableLobbyChat?: boolean;
@@ -550,6 +549,7 @@ export interface IConfig {
         hideLobbyButton?: boolean;
     };
     serviceUrl?: string;
+    setE2EEMode?: string;
     sharedVideoAllowedURLDomains?: Array<string>;
     sipInviteUrl?: string;
     speakerStats?: {

@@ -35,124 +35,121 @@ import logger from './logger';
  */
 MiddlewareRegistry.register(({ dispatch, getState }) => next => action => {
     const conference = getCurrentConference(getState);
+    const state = getState();
+    const config = state['features/base/config'];
+    
 
     switch (action.type) {
-        case APP_WILL_MOUNT:
-            registerE2eeAudioFiles(dispatch);
-            break;
+    case APP_WILL_MOUNT:
+        registerE2eeAudioFiles(dispatch);
+        break;
 
-        case APP_WILL_UNMOUNT:
-            unregisterE2eeAudioFiles(dispatch);
-            break;
+    case APP_WILL_UNMOUNT:
+        unregisterE2eeAudioFiles(dispatch);
+        break;
 
-        case CONFERENCE_JOINED:
-            const state = getState();
-            const config = state['features/base/config']
-            
-            if (config.setE2EEMode == "enabled" || config.setE2EEMode == "forced" && conference?.isE2EESupported) {
-                conference?.toggleE2EE(true);
-                const participant = getLocalParticipant(getState);
+    case CONFERENCE_JOINED:
+        const participant = getLocalParticipant(getState);
+        if ((config.setE2EEMode === 'enabled' || config.setE2EEMode === 'forced') && conference?.isE2EESupported) {
+            conference?.toggleE2EE(true);
 
-                if (conference?.isE2EEEnabled()) {
-                    dispatch(participantUpdated({
-                        e2eeEnabled: true,
-                        id: participant?.id ?? '',
-                        local: false
-                    }));
-                }
-
-            }
-
-            _updateMaxMode(dispatch, getState);
-
-            break;
-
-        case PARTICIPANT_JOINED: {
-            const result = next(action);
-
-            if (!isScreenShareParticipant(action.participant) && !action.participant.local) {
-                _updateMaxMode(dispatch, getState);
-            }
-            
-            return result;
-            
-        }
-
-        case PARTICIPANT_LEFT: {
-            const participant = getParticipantById(getState(), action.participant?.id);
-            const result = next(action);
-
-            if (!isScreenShareParticipant(participant)) {
-                _updateMaxMode(dispatch, getState);
-            }
-
-            return result;
-        }
-
-        case TOGGLE_E2EE: {
-            if (conference?.isE2EESupported() && conference.isE2EEEnabled() !== action.enabled) {
-                logger.debug(`E2EE will be ${action.enabled ? 'enabled' : 'disabled'}`);
-                conference.toggleE2EE(action.enabled);
-
-                // Broadcast that we enabled / disabled E2EE.
-                const participant = getLocalParticipant(getState);
-
+            if (conference?.isE2EEEnabled()) {
                 dispatch(participantUpdated({
-                    e2eeEnabled: action.enabled,
+                    e2eeEnabled: true,
                     id: participant?.id ?? '',
-                    local: true
+                    local: false
                 }));
-
-                const soundID = action.enabled ? E2EE_ON_SOUND_ID : E2EE_OFF_SOUND_ID;
-
-                dispatch(playSound(soundID));
             }
+        }
+        _updateMaxMode(dispatch, getState);
 
-            break;
+        break;
+
+    case PARTICIPANT_JOINED: {
+        const result = next(action);
+
+        if (!isScreenShareParticipant(action.participant) && !action.participant.local) {
+            _updateMaxMode(dispatch, getState);
         }
 
-        case SET_MEDIA_ENCRYPTION_KEY: {
-            if (conference?.isE2EESupported()) {
-                const { exportedKey, index } = action.keyInfo;
+        return result;
 
-                if (exportedKey) {
-                    window.crypto.subtle.importKey(
-                        'raw',
-                        new Uint8Array(exportedKey),
-                        'AES-GCM',
-                        false,
-                        ['encrypt', 'decrypt'])
-                        .then(
-                            encryptionKey => {
-                                conference.setMediaEncryptionKey({
-                                    encryptionKey,
-                                    index
-                                });
-                            })
-                        .catch(error => logger.error('SET_MEDIA_ENCRYPTION_KEY error', error));
-                } else {
-                    conference.setMediaEncryptionKey({
-                        encryptionKey: false,
-                        index
-                    });
-                }
-            }
-
-            break;
-        }
-
-        case PARTICIPANT_VERIFIED: {
-            const { isVerified, pId } = action;
-
-            conference?.markParticipantVerified(pId, isVerified);
-            break;
-        }
-
-        case START_VERIFICATION: {
-            conference?.startVerification(action.pId);
-            break;
-        }
     }
+
+    case PARTICIPANT_LEFT: {
+        const participant = getParticipantById(getState(), action.participant?.id);
+        const result = next(action);
+        if (!isScreenShareParticipant(participant)) {
+            _updateMaxMode(dispatch, getState);
+        }
+
+        return result;
+    }
+
+    case TOGGLE_E2EE: {
+        if (conference?.isE2EESupported() && conference.isE2EEEnabled() !== action.enabled) {
+            logger.debug(`E2EE will be ${action.enabled ? 'enabled' : 'disabled'}`);
+            conference.toggleE2EE(action.enabled);
+
+            // Broadcast that we enabled / disabled E2EE.
+            const participant = getLocalParticipant(getState);
+
+            dispatch(participantUpdated({
+                e2eeEnabled: action.enabled,
+                id: participant?.id ?? '',
+                local: true
+            }));
+
+            const soundID = action.enabled ? E2EE_ON_SOUND_ID : E2EE_OFF_SOUND_ID;
+
+            dispatch(playSound(soundID));
+        }
+
+        break;
+    }
+
+    case SET_MEDIA_ENCRYPTION_KEY: {
+        if (conference?.isE2EESupported()) {
+            const { exportedKey, index } = action.keyInfo;
+
+            if (exportedKey) {
+                window.crypto.subtle.importKey(
+                    'raw',
+                    new Uint8Array(exportedKey),
+                    'AES-GCM',
+                    false,
+                    [ 'encrypt', 'decrypt' ])
+                    .then(
+                        encryptionKey => {
+                            conference.setMediaEncryptionKey({
+                                encryptionKey,
+                                index
+                            });
+                        })
+                    .catch(error => logger.error('SET_MEDIA_ENCRYPTION_KEY error', error));
+            } else {
+                conference.setMediaEncryptionKey({
+                    encryptionKey: false,
+                    index
+                });
+            }
+        }
+
+        break;
+    }
+
+    case PARTICIPANT_VERIFIED: {
+        const { isVerified, pId } = action;
+
+        conference?.markParticipantVerified(pId, isVerified);
+        break;
+    }
+
+    case START_VERIFICATION: {
+        conference?.startVerification(action.pId);
+        break;
+    }
+}
 
     return next(action);
 });
